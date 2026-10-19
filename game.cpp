@@ -89,18 +89,34 @@ void Game::moveSnake() {
             break;
     }
     
-    // Проверяем столкновение со стеной
+    // 1. Проверка столкновения со стеной
     if (newHead.x < 0 || newHead.x >= FIELD_SIZE || 
         newHead.y < 0 || newHead.y >= FIELD_SIZE) {
         gameOver = true;
         return;
     }
     
+    // 2. Проверка столкновения с собственным хвостом
+    if (isSnakeAt(newHead)) {
+        gameOver = true;
+        return;
+    }
+    
+    // 3. Проверяем, съели ли еду
+    bool ateFood = (newHead.x == food.x && newHead.y == food.y);
+    
     // Вставляем новую голову в начало вектора
     snake.insert(snake.begin(), newHead);
     
-    // Удаляем хвост (последний элемент)
-    snake.pop_back();
+    if (ateFood) {
+        // Если съели еду — увеличиваем счёт и генерируем новую еду
+        // Хвост НЕ удаляем, змейка растёт
+        score++;
+        spawnFood();
+    } else {
+        // Если не съели — удаляем хвост (длина остаётся прежней)
+        snake.pop_back();
+    }
 }
 
 void Game::handleInput(const sf::Event& event) {
