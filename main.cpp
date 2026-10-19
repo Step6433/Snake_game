@@ -2,6 +2,10 @@
 #include <iostream>
 
 int main() {
-    std::cout << "Snake Game" << std::endl;
+    Game game;
+    
+    // Пока просто рисуем поле один раз
+    game.render();
+    
     return 0;
 }
