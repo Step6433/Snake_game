@@ -1,29 +1,21 @@
 #include "game.h"
 #include <iostream>
-#include <cstdlib> // для rand и srand
-#include <ctime>   // для time
+#include <cstdlib>
+#include <ctime>
 
-// Конструктор игры
 Game::Game() : direction(RIGHT), score(0), gameOver(false) {
-    // Инициализируем генератор случайных чисел (делаем это один раз при старте)
     std::srand(static_cast<unsigned int>(std::time(nullptr)));
-    
-    // Змейка стартует в центре поля (5, 5), длина 1
     snake.push_back({5, 5});
-    
-    // Сразу создаем первую еду
     spawnFood();
 }
 
-// Генерация еды на свободной клетке
 void Game::spawnFood() {
     do {
         food.x = std::rand() % FIELD_SIZE;
         food.y = std::rand() % FIELD_SIZE;
-    } while (isSnakeAt(food)); // Повторяем, если сгенерировали координаты прямо на змейке
+    } while (isSnakeAt(food));
 }
 
-// Проверка, находится ли змейка в данной точке
 bool Game::isSnakeAt(const Point& p) const {
     for (const auto& segment : snake) {
         if (segment.x == p.x && segment.y == p.y) {
@@ -33,47 +25,105 @@ bool Game::isSnakeAt(const Point& p) const {
     return false;
 }
 
-// --- Заглушки для будущих шагов (чтобы код собирался) ---
-
-void Game::update() {
-    // Пока пусто
-}
-
-void Game::render() const {
-    // Очистка экрана терминала (работает на macOS/Linux)
-    system("clear");
+void Game::render(sf::RenderWindow& window) {
+    // Очищаем окно чёрным цветом
+    window.clear(sf::Color::Black);
     
-    // Проходим по всем строкам (Y) и столбцам (X)
+    // Рисуем игровое поле (сетка)
     for (int y = 0; y < FIELD_SIZE; ++y) {
         for (int x = 0; x < FIELD_SIZE; ++x) {
-            Point current = {x, y};
-            
-            // 1. Проверяем, является ли эта клетка головой змейки (первый элемент вектора)
-            if (current.x == snake[0].x && current.y == snake[0].y) {
-                std::cout << "O "; // Голова
-            } 
-            // 2. Проверяем, является ли клетка частью тела змейки
-            else if (isSnakeAt(current)) {
-                std::cout << "* "; // Тело
-            } 
-            // 3. Проверяем, находится ли здесь еда
-            else if (current.x == food.x && current.y == food.y) {
-                std::cout << "F "; // Еда
-            } 
-            // 4. Иначе это пустая клетка
-            else {
-                std::cout << ". "; // Пустота
-            }
+            sf::RectangleShape cell(sf::Vector2f(CELL_SIZE - 2, CELL_SIZE - 2));
+            // В SFML 3.0 setPosition принимает Vector2f
+            cell.setPosition(sf::Vector2f(x * CELL_SIZE + 1, y * CELL_SIZE + 1));
+            cell.setFillColor(sf::Color(30, 30, 30)); // Тёмно-серый фон
+            window.draw(cell);
         }
-        std::cout << "\n"; // Переход на новую строку после каждого ряда
     }
     
-    // Выводим счёт под полем
-    std::cout << "Счёт: " << score << "\n";
+    // Рисуем еду
+    sf::RectangleShape foodShape(sf::Vector2f(CELL_SIZE - 4, CELL_SIZE - 4));
+    foodShape.setPosition(sf::Vector2f(food.x * CELL_SIZE + 2, food.y * CELL_SIZE + 2));
+    foodShape.setFillColor(sf::Color::Red);
+    window.draw(foodShape);
+    
+    // Рисуем змейку
+    for (size_t i = 0; i < snake.size(); ++i) {
+        sf::RectangleShape segment(sf::Vector2f(CELL_SIZE - 4, CELL_SIZE - 4));
+        segment.setPosition(sf::Vector2f(snake[i].x * CELL_SIZE + 2, snake[i].y * CELL_SIZE + 2));
+        
+        // Голова змейки зелёная, тело - светло-зелёное
+        if (i == 0) {
+            segment.setFillColor(sf::Color::Green);
+        } else {
+            segment.setFillColor(sf::Color(100, 200, 100));
+        }
+        
+        window.draw(segment);
+    }
 }
 
-void Game::handleInput(char key) {
-    // Пока пусто
+void Game::update() {
+    // Проверяем, прошло ли достаточно времени для следующего движения
+    if (moveClock.getElapsedTime().asSeconds() >= moveInterval) {
+        moveSnake();
+        moveClock.restart(); // Перезапускаем часы
+    }
+}
+
+void Game::moveSnake() {
+    // Вычисляем новую позицию головы
+    Point newHead = snake[0];
+    
+    switch (direction) {
+        case UP:
+            newHead.y--;
+            break;
+        case DOWN:
+            newHead.y++;
+            break;
+        case LEFT:
+            newHead.x--;
+            break;
+        case RIGHT:
+            newHead.x++;
+            break;
+    }
+    
+    // Проверяем столкновение со стеной
+    if (newHead.x < 0 || newHead.x >= FIELD_SIZE || 
+        newHead.y < 0 || newHead.y >= FIELD_SIZE) {
+        gameOver = true;
+        return;
+    }
+    
+    // Вставляем новую голову в начало вектора
+    snake.insert(snake.begin(), newHead);
+    
+    // Удаляем хвост (последний элемент)
+    snake.pop_back();
+}
+
+void Game::handleInput(const sf::Event& event) {
+    // Проверяем, было ли нажата клавиша
+    if (event.is<sf::Event::KeyPressed>()) {
+        const auto keyEvent = event.getIf<sf::Event::KeyPressed>();
+        if (keyEvent) {
+            // Меняем направление в зависимости от нажатой клавиши
+            // Змейка не может развернуться на 180 градусов
+            if (keyEvent->code == sf::Keyboard::Key::Up && direction != DOWN) {
+                direction = UP;
+            }
+            else if (keyEvent->code == sf::Keyboard::Key::Down && direction != UP) {
+                direction = DOWN;
+            }
+            else if (keyEvent->code == sf::Keyboard::Key::Left && direction != RIGHT) {
+                direction = LEFT;
+            }
+            else if (keyEvent->code == sf::Keyboard::Key::Right && direction != LEFT) {
+                direction = RIGHT;
+            }
+        }
+    }
 }
 
 bool Game::isGameOver() const {

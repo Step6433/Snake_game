@@ -2,8 +2,10 @@
 #define GAME_H
 
 #include <vector>
+#include <SFML/Graphics.hpp>
 
 const int FIELD_SIZE = 10;
+const int CELL_SIZE = 50;
 
 struct Point {
     int x, y;
@@ -23,17 +25,20 @@ private:
     Point food;
     int score;
     bool gameOver;
+    
+    sf::Clock moveClock; // Часы для контроля скорости движения
+    const float moveInterval = 0.2f; // Интервал движения в секундах (5 раз в секунду)
 
-    // Новые методы для генерации еды
     void spawnFood();
     bool isSnakeAt(const Point& p) const;
+    void moveSnake(); // Новый метод для движения
 
 public:
     Game();
     
     void update();
-    void render() const;
-    void handleInput(char key);
+    void render(sf::RenderWindow& window);
+    void handleInput(const sf::Event& event);
     
     bool isGameOver() const;
     int getScore() const;
