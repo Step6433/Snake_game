@@ -18,6 +18,13 @@ enum Direction {
     RIGHT
 };
 
+enum GameState {
+    MENU,
+    PLAYING,
+    GAME_OVER,
+    HELP
+};
+
 class Game {
 private:
     std::vector<Point> snake;
@@ -25,6 +32,8 @@ private:
     Point food;
     int score;
     bool gameOver;
+    GameState state;
+    GameState prevState;
     
     sf::Clock moveClock;
     float moveInterval;
@@ -32,6 +41,7 @@ private:
     void spawnFood();
     bool isSnakeAt(const Point& point) const;
     void moveSnake();
+    void startGame();
 
 public:
     Game();
@@ -43,6 +53,7 @@ public:
     
     bool isGameOver() const;
     int getScore() const;
+    GameState getState() const;
 };
 
 #endif

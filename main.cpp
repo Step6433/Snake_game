@@ -24,15 +24,10 @@ int main() {
                 }
             }
             
-            if (!game.isGameOver()) {
-                game.handleInput(*event);
-            }
+            game.handleInput(*event);
         }
         
-        if (!game.isGameOver()) {
-            game.update();
-        }
-        
+        game.update();
         game.render(window);
         
         if (game.isGameOver()) {
