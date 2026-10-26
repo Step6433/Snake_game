@@ -3,19 +3,27 @@
 #include <cstdlib>
 #include <ctime>
 
+// Конструктор игры
 Game::Game() : direction(RIGHT), score(0), gameOver(false) {
+    // Инициализируем генератор случайных чисел
     std::srand(static_cast<unsigned int>(std::time(nullptr)));
+    
+    // Змейка стартует в центре поля (5, 5), длина 1
     snake.push_back({5, 5});
+    
+    // Сразу создаем первую еду
     spawnFood();
 }
 
+// Генерация еды на свободной клетке
 void Game::spawnFood() {
     do {
         food.x = std::rand() % FIELD_SIZE;
         food.y = std::rand() % FIELD_SIZE;
-    } while (isSnakeAt(food));
+    } while (isSnakeAt(food)); // Повторяем, если сгенерировали координаты на змейке
 }
 
+// Проверка, находится ли змейка в данной точке
 bool Game::isSnakeAt(const Point& p) const {
     for (const auto& segment : snake) {
         if (segment.x == p.x && segment.y == p.y) {
@@ -25,6 +33,7 @@ bool Game::isSnakeAt(const Point& p) const {
     return false;
 }
 
+// Отрисовка игры
 void Game::render(sf::RenderWindow& window) {
     // Очищаем окно чёрным цветом
     window.clear(sf::Color::Black);
@@ -33,7 +42,6 @@ void Game::render(sf::RenderWindow& window) {
     for (int y = 0; y < FIELD_SIZE; ++y) {
         for (int x = 0; x < FIELD_SIZE; ++x) {
             sf::RectangleShape cell(sf::Vector2f(CELL_SIZE - 2, CELL_SIZE - 2));
-            // В SFML 3.0 setPosition принимает Vector2f
             cell.setPosition(sf::Vector2f(x * CELL_SIZE + 1, y * CELL_SIZE + 1));
             cell.setFillColor(sf::Color(30, 30, 30)); // Тёмно-серый фон
             window.draw(cell);
@@ -60,8 +68,20 @@ void Game::render(sf::RenderWindow& window) {
         
         window.draw(segment);
     }
+    
+    // Рисуем счёт в нижней части окна
+    sf::Font font;
+    if (font.openFromFile("/System/Library/Fonts/Helvetica.ttc")) {
+        sf::Text scoreText(font);
+        scoreText.setString("Score: " + std::to_string(score));
+        scoreText.setCharacterSize(24);
+        scoreText.setFillColor(sf::Color::White);
+        scoreText.setPosition(sf::Vector2f(10, 510));
+        window.draw(scoreText);
+    }
 }
 
+// Обновление состояния игры
 void Game::update() {
     // Проверяем, прошло ли достаточно времени для следующего движения
     if (moveClock.getElapsedTime().asSeconds() >= moveInterval) {
@@ -70,6 +90,7 @@ void Game::update() {
     }
 }
 
+// Движение змейки
 void Game::moveSnake() {
     // Вычисляем новую позицию головы
     Point newHead = snake[0];
@@ -119,8 +140,9 @@ void Game::moveSnake() {
     }
 }
 
+// Обработка ввода
 void Game::handleInput(const sf::Event& event) {
-    // Проверяем, было ли нажата клавиша
+    // Проверяем, была ли нажата клавиша
     if (event.is<sf::Event::KeyPressed>()) {
         const auto keyEvent = event.getIf<sf::Event::KeyPressed>();
         if (keyEvent) {
@@ -142,10 +164,12 @@ void Game::handleInput(const sf::Event& event) {
     }
 }
 
+// Проверка окончания игры
 bool Game::isGameOver() const {
     return gameOver;
 }
 
+// Получение счёта
 int Game::getScore() const {
     return score;
 }
