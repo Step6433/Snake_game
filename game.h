@@ -12,17 +12,11 @@ struct Point {
 };
 
 enum Direction {
-    UP,
-    DOWN,
-    LEFT,
-    RIGHT
+    UP, DOWN, LEFT, RIGHT
 };
 
 enum GameState {
-    MENU,
-    PLAYING,
-    GAME_OVER,
-    HELP
+    MENU, PLAYING, GAME_OVER, HELP
 };
 
 class Game {
@@ -31,10 +25,11 @@ private:
     Direction direction;
     Point food;
     int score;
+    int teleports;
     bool gameOver;
     GameState state;
     GameState prevState;
-    
+
     sf::Clock moveClock;
     float moveInterval;
 
@@ -45,12 +40,12 @@ private:
 
 public:
     Game();
-    
+
     void update();
     void render(sf::RenderWindow& window);
     void handleInput(const sf::Event& event);
     void reset();
-    
+
     bool isGameOver() const;
     int getScore() const;
     GameState getState() const;
