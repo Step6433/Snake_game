@@ -5,7 +5,7 @@
 #include <SFML/Graphics.hpp>
 
 const int FIELD_SIZE = 10;
-const int CELL_SIZE = 50;
+const int CELL_SIZE = 60;
 
 struct Point {
     int x, y;
@@ -26,12 +26,12 @@ private:
     int score;
     bool gameOver;
     
-    sf::Clock moveClock; // Часы для контроля скорости движения
-    const float moveInterval = 0.2f; // Интервал движения в секундах (5 раз в секунду)
+    sf::Clock moveClock;
+    float moveInterval;
 
     void spawnFood();
-    bool isSnakeAt(const Point& p) const;
-    void moveSnake(); // Новый метод для движения
+    bool isSnakeAt(const Point& point) const;
+    void moveSnake();
 
 public:
     Game();
@@ -44,4 +44,4 @@ public:
     int getScore() const;
 };
 
-#endif // GAME_H
+#endif
