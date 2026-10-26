@@ -39,6 +39,7 @@ public:
     void update();
     void render(sf::RenderWindow& window);
     void handleInput(const sf::Event& event);
+    void reset();
     
     bool isGameOver() const;
     int getScore() const;

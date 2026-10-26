@@ -140,3 +140,13 @@ bool Game::isGameOver() const {
 int Game::getScore() const {
     return score;
 }
+
+void Game::reset() {
+    snake.clear();
+    snake.push_back({5, 5});
+    direction = RIGHT;
+    score = 0;
+    gameOver = false;
+    moveClock.restart();
+    spawnFood();
+}

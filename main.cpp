@@ -11,7 +11,22 @@ int main() {
                 window.close();
             }
             
-            game.handleInput(*event);
+            if (event->is<sf::Event::KeyPressed>()) {
+                const auto keyEvent = event->getIf<sf::Event::KeyPressed>();
+                if (keyEvent) {
+                    if (keyEvent->code == sf::Keyboard::Key::Escape) {
+                        window.close();
+                    }
+                    
+                    if (keyEvent->code == sf::Keyboard::Key::R && game.isGameOver()) {
+                        game.reset();
+                    }
+                }
+            }
+            
+            if (!game.isGameOver()) {
+                game.handleInput(*event);
+            }
         }
         
         if (!game.isGameOver()) {
@@ -24,7 +39,7 @@ int main() {
             sf::Font font;
             if (font.openFromFile("/System/Library/Fonts/Helvetica.ttc")) {
                 sf::Text gameOverText(font);
-                gameOverText.setString("Game Over!\nScore: " + std::to_string(game.getScore()) + "\nPress ESC to exit");
+                gameOverText.setString("Game Over!\nScore: " + std::to_string(game.getScore()) + "\nPress R to restart\nPress ESC to exit");
                 gameOverText.setCharacterSize(40);
                 gameOverText.setFillColor(sf::Color::White);
                 
