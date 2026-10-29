@@ -2,12 +2,12 @@
 #include <cstdlib>
 #include <ctime>
 
-// Конструктор: инициализация начального состояния игры
+// Инициализация начальных параметров игры и генератора случайных чисел
 Game::Game() : direction(RIGHT), score(0), teleports(0), gameOver(false), state(MENU), prevState(MENU), moveInterval(0.2f) {
     std::srand(static_cast<unsigned int>(std::time(nullptr)));
 }
 
-// Генерация еды на случайной свободной клетке
+// Генерация координат еды на случайной свободной клетке поля
 void Game::spawnFood() {
     do {
         food.x = std::rand() % FIELD_SIZE;
@@ -15,7 +15,7 @@ void Game::spawnFood() {
     } while (isSnakeAt(food));
 }
 
-// Проверка, занимает ли змейка указанную точку
+// Проверка наличия сегмента змейки в заданных координатах
 bool Game::isSnakeAt(const Point& point) const {
     for (const auto& segment : snake) {
         if (segment.x == point.x && segment.y == point.y) {
@@ -25,10 +25,11 @@ bool Game::isSnakeAt(const Point& point) const {
     return false;
 }
 
-// Отрисовка игрового поля, змейки, еды и интерфейса
+// Отрисовка интерфейса и игровых объектов в зависимости от текущего состояния
 void Game::render(sf::RenderWindow& window) {
     window.clear(sf::Color::Black);
 
+    // Отрисовка главного меню
     if (state == MENU) {
         sf::Font font;
         if (font.openFromFile("/System/Library/Fonts/Helvetica.ttc")) {
@@ -62,6 +63,7 @@ void Game::render(sf::RenderWindow& window) {
         return;
     }
 
+    // Отрисовка экрана справки
     if (state == HELP) {
         sf::Font font;
         if (font.openFromFile("/System/Library/Fonts/Helvetica.ttc")) {
@@ -86,7 +88,7 @@ void Game::render(sf::RenderWindow& window) {
         return;
     }
 
-    // Отрисовка игрового поля
+    // Отрисовка сетки игрового поля
     for (int y = 0; y < FIELD_SIZE; ++y) {
         for (int x = 0; x < FIELD_SIZE; ++x) {
             sf::RectangleShape cell(sf::Vector2f(CELL_SIZE - 2, CELL_SIZE - 2));
@@ -102,7 +104,7 @@ void Game::render(sf::RenderWindow& window) {
     foodShape.setFillColor(sf::Color::Red);
     window.draw(foodShape);
 
-    // Отрисовка змейки
+    // Отрисовка сегментов змейки (голова отличается цветом от тела)
     for (size_t i = 0; i < snake.size(); ++i) {
         sf::RectangleShape segment(sf::Vector2f(CELL_SIZE - 4, CELL_SIZE - 4));
         segment.setPosition(sf::Vector2f(snake[i].x * CELL_SIZE + 2, snake[i].y * CELL_SIZE + 2));
@@ -116,7 +118,7 @@ void Game::render(sf::RenderWindow& window) {
         window.draw(segment);
     }
 
-    // Отрисовка счёта и телепортаций
+    // Вывод текста со счетом и количеством телепортаций
     sf::Font font;
     if (font.openFromFile("/System/Library/Fonts/Helvetica.ttc")) {
         sf::Text scoreText(font);
@@ -135,7 +137,7 @@ void Game::render(sf::RenderWindow& window) {
     }
 }
 
-// Обновление состояния игры
+// Обновление логики игры: движение змейки по таймеру
 void Game::update() {
     if (state != PLAYING) {
         return;
@@ -147,10 +149,11 @@ void Game::update() {
     }
 }
 
-// Движение змейки и проверка столкновений
+// Расчет новой позиции головы змейки и обработка коллизий
 void Game::moveSnake() {
     Point newHead = snake[0];
 
+    // Изменение координат в зависимости от текущего направления
     switch (direction) {
         case UP:
             newHead.y--;
@@ -166,7 +169,7 @@ void Game::moveSnake() {
             break;
     }
 
-    // Телепортация через границы поля
+    // Логика телепортации: перенос головы на противоположную сторону поля при выходе за границы
     if (newHead.x < 0 || newHead.x >= FIELD_SIZE ||
         newHead.y < 0 || newHead.y >= FIELD_SIZE) {
 
@@ -177,7 +180,7 @@ void Game::moveSnake() {
         teleports++;
     }
 
-    // Столкновение с хвостом
+    // Проверка столкновения с собственным хвостом
     if (isSnakeAt(newHead)) {
         gameOver = true;
         state = GAME_OVER;
@@ -185,8 +188,11 @@ void Game::moveSnake() {
     }
 
     bool ateFood = (newHead.x == food.x && newHead.y == food.y);
+    
+    // Добавление новой головы в начало вектора
     snake.insert(snake.begin(), newHead);
 
+    // Если еда съедена, хвост не удаляется (змейка растет). Иначе удаляем последний сегмент.
     if (ateFood) {
         score++;
         spawnFood();
@@ -195,7 +201,7 @@ void Game::moveSnake() {
     }
 }
 
-// Обработка ввода
+// Обработка нажатий клавиш в зависимости от текущего состояния игры
 void Game::handleInput(const sf::Event& event) {
     if (event.is<sf::Event::KeyPressed>()) {
         const auto keyEvent = event.getIf<sf::Event::KeyPressed>();
@@ -213,6 +219,7 @@ void Game::handleInput(const sf::Event& event) {
                     prevState = PLAYING;
                     state = HELP;
                 }
+                // Смена направления с запретом на разворот на 180 градусов
                 else if (keyEvent->code == sf::Keyboard::Key::Up && direction != DOWN) {
                     direction = UP;
                 }
@@ -235,7 +242,7 @@ void Game::handleInput(const sf::Event& event) {
     }
 }
 
-// Запуск игры
+// Инициализация параметров для начала новой игры
 void Game::startGame() {
     snake.clear();
     snake.push_back({5, 5});
@@ -248,7 +255,7 @@ void Game::startGame() {
     spawnFood();
 }
 
-// Сброс в меню
+// Полный сброс игры и возврат в главное меню
 void Game::reset() {
     snake.clear();
     snake.push_back({5, 5});
