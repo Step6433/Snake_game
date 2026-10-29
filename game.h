@@ -1,16 +1,20 @@
 #ifndef GAME_H
 #define GAME_H
 
+// Подключение стандартной библиотеки для динамических массивов и графической библиотеки SFML
 #include <vector>
 #include <SFML/Graphics.hpp>
 
+// Константы игрового поля: размер поля в клетках и размер одной клетки в пикселях
 const int FIELD_SIZE = 10;
 const int CELL_SIZE = 60;
 
+// Структура для хранения координат точки на игровом поле
 struct Point {
     int x, y;
 };
 
+// Перечисление возможных направлений движения змейки
 enum Direction {
     UP,
     DOWN,
@@ -18,6 +22,7 @@ enum Direction {
     RIGHT
 };
 
+// Перечисление состояний игры: меню, игровой процесс, конец игры, справка
 enum GameState {
     MENU,
     PLAYING,
@@ -25,35 +30,39 @@ enum GameState {
     HELP
 };
 
+// Основной класс игры, инкапсулирующий всю игровую логику
 class Game {
 private:
+    // Вектор координат сегментов змейки (первый элемент — голова)
     std::vector<Point> snake;
-    Direction direction;
-    Point food;
-    int score;
-    bool gameOver;
-    GameState state;
-    GameState prevState;
+    Direction direction;        // Текущее направление движения
+    Point food;                 // Координаты еды на поле
+    int score;                  // Текущий счёт игрока
+    bool gameOver;              // Флаг окончания игры
+    GameState state;            // Текущее состояние игры
+    GameState prevState;        // Предыдущее состояние (для возврата из справки)
     
-    sf::Clock moveClock;
-    float moveInterval;
+    sf::Clock moveClock;        // Таймер для контроля скорости движения
+    float moveInterval;         // Интервал между движениями в секундах
 
-    void spawnFood();
-    bool isSnakeAt(const Point& point) const;
-    void moveSnake();
-    void startGame();
+    // Приватные методы для внутренней логики игры
+    void spawnFood();                           // Генерация еды на случайной свободной клетке
+    bool isSnakeAt(const Point& point) const;   // Проверка, занимает ли змейка указанную точку
+    void moveSnake();                           // Вычисление новой позиции головы и проверка столкновений
+    void startGame();                           // Инициализация параметров для начала игры
 
 public:
-    Game();
+    Game();  // Конструктор класса
     
-    void update();
-    void render(sf::RenderWindow& window);
-    void handleInput(const sf::Event& event);
-    void reset();
+    // Публичные методы для взаимодействия с игрой извне
+    void update();                              // Обновление состояния игры (вызов движения по таймеру)
+    void render(sf::RenderWindow& window);      // Отрисовка текущего состояния игры в окно
+    void handleInput(const sf::Event& event);   // Обработка пользовательского ввода
+    void reset();                               // Сброс игры в начальное состояние (меню)
     
-    bool isGameOver() const;
-    int getScore() const;
-    GameState getState() const;
+    bool isGameOver() const;    // Проверка, завершена ли игра
+    int getScore() const;       // Получение текущего счёта
+    GameState getState() const; // Получение текущего состояния игры
 };
 
 #endif
